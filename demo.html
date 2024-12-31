@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Malayalam to English Translator</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+  <style>
+    .translator-app {
+      max-width: 600px;
+      margin: auto;
+      background-color: #f9f9f9;
+    }
+    .text-box {
+      resize: none;
+    }
+    .input-toolbar {
+      background-color: #f1f1f1;
+      border-top: 1px solid #ddd;
+    }
+    .speaker-icon, .audio-icon, .copy-icon {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-5">
+    <div class="translator-app shadow rounded">
+      <!-- Header -->
+      <div class="header bg-primary text-white text-center py-3">
+        <h1 class="h5">Malayalam to English Translator</h1>
+      </div>
+
+      <!-- Translation Section -->
+      <div class="content p-4">
+        <!-- Input Text -->
+        <div class="position-relative mb-4">
+          <label for="inputText" class="form-label d-flex align-items-center">
+            Malayalam
+            <!-- Speaker Icon -->
+            <span class="speaker-icon ms-2">
+              <i class="bi bi-volume-up-fill"></i>
+            </span>
+          </label>
+          <textarea id="inputText" class="form-control text-box" rows="4" placeholder="മലയാളം ലേഖനം ഇവിടെ നൽകുക..."></textarea>
+          <!-- Bottom Toolbar -->
+          <div class="input-toolbar d-flex justify-content-between align-items-center px-3 py-2">
+
+            </span>
+            <!-- Translate Button -->
+            <button id="translateBtn" class="translate-btn btn btn-warning">Translate</button>
+          </div>
+        </div>
+
+        <!-- Output Text -->
+        <div class="position-relative">
+          <label for="outputText" class="form-label d-flex align-items-center">
+            English
+            <!-- Speaker Icon -->
+            <span class="speaker-icon ms-2">
+              <i class="bi bi-volume-up-fill"></i>
+            </span>
+          </label>
+          <textarea id="outputText" class="form-control text-box" rows="4" placeholder="Translation appears here..." readonly></textarea>
+   
+          </span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer bg-light text-center py-2">
+        <p class="mb-0">&copy; ATHUL_KRISHNA</p>
+      </div>
+    </div>
+  </div>
+
+    <script>
+    document.getElementById('translateBtn').addEventListener('click', async () => {
+      const malayalamText = document.getElementById('inputText').value;
+      const englishTextArea = document.getElementById('outputText');
+
+      if (!malayalamText.trim()) {
+        englishTextArea.value = 'Please enter Malayalam text.';
+        return;
+      }
+
+      try {
+        const response = await fetch('/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `text=${encodeURIComponent(malayalamText)}`
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          englishTextArea.value = data.translation;
+        } else {
+          englishTextArea.value = 'Translation failed: ' + (data.error || 'Unknown error');
+        }
+      } catch (error) {
+        englishTextArea.value = 'Network error occurred.';
+      }
+    });
+
+    document.querySelectorAll('.speaker-icon').forEach((speakerIcon, index) => {
+      speakerIcon.addEventListener('click', async () => {
+        const textArea = index === 0 ? document.getElementById('inputText') : document.getElementById('outputText');
+        const text = textArea.value;
+
+        if (!text.trim()) {
+          alert('No text available to play.');
+          return;
+        }
+
+        try {
+          const response = await fetch('/speak', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `text=${encodeURIComponent(text)}`
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            const audio = new Audio(data.audio_url);
+            audio.play();
+          } else {
+            alert('Failed to generate audio: ' + (data.error || 'Unknown error'));
+          }
+        } catch (error) {
+          alert('Network error occurred.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
